@@ -12,6 +12,10 @@ public class KatieChassis3 extends LinearOpMode {
     private DcMotor leftDriveMotor;
 
     private DcMotor armMotor;
+    private int targetPosition = 0;
+    private final int targetSpeed = 1;
+    private final int topClamp = 1400;
+    private final int bottomClamp = 50;
 
 
     @Override
@@ -41,8 +45,9 @@ public class KatieChassis3 extends LinearOpMode {
 
         armMotor.setDirection(DcMotor.Direction.REVERSE);
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor.setTargetPosition(0);
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        armMotor.setPower(.25);
+        armMotor.setPower(0.25);
         telemetry.addData("data", "Encoder is reset");
     }
     public void driveRobot(){
@@ -67,19 +72,23 @@ public class KatieChassis3 extends LinearOpMode {
     }
 
     public void armMovement(){
-        double armPower;
-        double armModifier = 0.1;
+        //// check to see that add'l movement will not violate the clamp; if the
+        // new movement doesn't violate clamp, then do the new movement
+        if (gamepad1.dpad_up && targetPosition + targetSpeed < topClamp){
+            targetPosition += targetSpeed;
+            // define movement so that if movement would take you outside
+            // the clamp, movement stops at clamp
+        } else if(gamepad1.dpad_up){
+            targetPosition = topClamp;
+        }
 
-        armPower = -gamepad1.left_stick_y;
-
-        //slow down arm with a multiplier
-        armPower = armPower * armModifier;
-
-        armMotor.setPower(armPower);
-
-        //show wheel power and turningModifier
-        telemetry.addData("left stick y", gamepad1.left_stick_y);
-        telemetry.addData("Arm modifier", armModifier);
-        //telemetry.addData("Test motor power", testPower);
+        if (gamepad1.dpad_down && targetPosition - targetSpeed > bottomClamp){
+            targetPosition -= targetSpeed;
+            // define movement so that if movement would take you outside
+            // the clamp, movement stops at clamp
+        } else if(gamepad1.dpad_down){
+            targetPosition = bottomClamp;
+        }
+        armMotor.setTargetPosition(targetPosition);
     }
 }
